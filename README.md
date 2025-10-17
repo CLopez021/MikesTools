@@ -4,7 +4,13 @@ Upload audio files and get word-by-word SRT subtitle files using AssemblyAI. Thi
 
 ## Setup
 
-### 1. Install uv
+### 1. Clone repo
+
+```bash
+git clone https://github.com/CLopez021/SRTCreator.git
+```
+
+### 2. Install uv
 
 macOS/Linux:
 ```bash
@@ -16,7 +22,7 @@ Windows:
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### 2. Configure API key
+### 3. Configure API key
 
 Add your API key to the `.env-example` file:
 ```bash
@@ -24,9 +30,9 @@ ASSEMBLY_AI_API_KEY=your_api_key_here
 ```
 Get your API key from [AssemblyAI](https://www.assemblyai.com/).
 
-### 3. Change the name of `.env-example` to `.env`
+### 4. Change the name of `.env-example` to `.env`
 
-## 4. Run
+## 5. Run
 
 ```bash
 uv run main.py
