@@ -35,7 +35,7 @@ Get your API key from [AssemblyAI](https://www.assemblyai.com/).
 ## 5. Run
 
 ```bash
-uv run main.py
+uv run src/backend/main.py
 ```
 
 Open http://localhost:8000 in your browser.

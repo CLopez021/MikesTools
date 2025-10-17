@@ -30,7 +30,8 @@ atexit.register(cleanup_tmp_dir)
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the frontend HTML page"""
-    with open("index.html", "r") as f:
+    html_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "index.html")
+    with open(html_path, "r") as f:
         return HTMLResponse(content=f.read())
 
 @app.post("/transcribe")
