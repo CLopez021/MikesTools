@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Transcription - AssemblyAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .drop-zone.dragging {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .drop-zone-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone-text {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-subtext {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .submit-btn.show {
+            display: block;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .result-text {
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #e53e3e;
+        }
+
+        .error .result-title {
+            color: #e53e3e;
+        }
+
+        .result-language {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .download-icon {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Audio Transcription</h1>
+        <p class="subtitle">Upload an audio file to transcribe it using AssemblyAI</p>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon">📁</div>
+            <div class="drop-zone-text">Drop your audio file here</div>
+            <div class="drop-zone-subtext">or click to browse</div>
+        </div>
+
+        <input type="file" id="fileInput" class="file-input" accept="audio/*,video/*">
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn">Transcribe Audio</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Transcribing your audio... This may take a minute.</div>
+        </div>
+
+        <div class="result" id="result">
+            <div class="result-language" id="resultLanguage"></div>
+            <div class="result-title">Transcription Result:</div>
+            <div class="result-text" id="resultText"></div>
+            <a id="downloadBtn" class="download-btn" style="display: none;">
+                <span class="download-icon">⬇️</span>
+                <span>Download SRT File</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+        const resultLanguage = document.getElementById('resultLanguage');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let selectedFile = null;
+
+        // Click to upload
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // Drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragging');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragging');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragging');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            submitBtn.classList.add('show');
+            result.classList.remove('show');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        submitBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            submitBtn.disabled = true;
+            loading.classList.add('show');
+            result.classList.remove('show');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    result.classList.remove('error');
+                    result.classList.add('show');
+                    resultText.textContent = data.text;
+                    
+                    if (data.language_code) {
+                        resultLanguage.textContent = `Detected Language: ${data.language_code}`;
+                    } else {
+                        resultLanguage.textContent = '';
+                    }
+
+                    // Show download button with proper filename
+                    if (data.srt_file_id) {
+                        downloadBtn.href = `/download/${data.srt_file_id}`;
+                        downloadBtn.download = data.srt_filename || 'transcript.srt';
+                        downloadBtn.style.display = 'inline-flex';
+                    }
+                } else {
+                    result.classList.add('error');
+                    result.classList.add('show');
+                    resultText.textContent = data.detail || 'An error occurred during transcription.';
+                    resultLanguage.textContent = '';
+                    downloadBtn.style.display = 'none';
+                }
+            } catch (error) {
+                result.classList.add('error');
+                result.classList.add('show');
+                resultText.textContent = 'Failed to connect to the server: ' + error.message;
+                resultLanguage.textContent = '';
+                downloadBtn.style.display = 'none';
+            } finally {
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+
