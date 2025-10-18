@@ -50,7 +50,6 @@ async def transcribe_audio(file: UploadFile = File(...)):
         config = aai.TranscriptionConfig(
             speaker_labels=True,
             format_text=True,
-            punctuate=True,
             speech_model=aai.SpeechModel.best,
             language_detection=True
         )
